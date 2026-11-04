@@ -1,207 +1,108 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="MUSINSA STYLE",
+    page_title="MUSINSA",
     page_icon="🖤",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# ========== 무신사 스타일 커스텀 CSS ==========
+# ========== 무신사 스타일 CSS (강력 버전) ==========
 st.markdown("""
 <style>
-/* 전체 배경 & 폰트 */
-html, body, [class*="css"] {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+/* 전체 배경 */
+.stApp {
     background-color: #FFFFFF !important;
-    color: #111111 !important;
 }
 
-/* 헤더 영역 숨기기 / 깔끔하게 */
-header[data-testid="stHeader"] {
-    background: #000000 !important;
-    height: 60px;
-}
-header[data-testid="stHeader"] * {
-    color: white !important;
+/* 메인 영역 */
+[data-testid="stAppViewContainer"] {
+    background-color: #FFFFFF !important;
 }
 
-/* 메인 컨테이너 여백 조정 */
-.block-container {
-    padding-top: 2rem !important;
-    padding-bottom: 3rem !important;
-    max-width: 1280px !important;
+/* 헤더 (상단 검은색 바) */
+[data-testid="stHeader"] {
+    background-color: #000000 !important;
 }
 
 /* 사이드바 */
-section[data-testid="stSidebar"] {
+[data-testid="stSidebar"] {
     background-color: #111111 !important;
 }
-section[data-testid="stSidebar"] * {
+[data-testid="stSidebar"] * {
     color: #FFFFFF !important;
 }
 
-/* 버튼 - 무신사 스타일 (블랙 버튼) */
+/* 버튼 - 무신사 스타일 */
 .stButton > button {
     background-color: #000000 !important;
     color: #FFFFFF !important;
     border: 1px solid #000000 !important;
-    border-radius: 0px !important;          /* 각진 느낌 */
+    border-radius: 0px !important;
     font-weight: 600 !important;
-    letter-spacing: 0.5px !important;
     height: 42px !important;
-    transition: all 0.2s ease !important;
 }
 .stButton > button:hover {
     background-color: #333333 !important;
     border-color: #333333 !important;
-    color: #FFFFFF !important;
+    color: white !important;
 }
 
-/* Primary 버튼도 동일하게 */
+/* Primary 버튼 */
 button[kind="primary"] {
     background-color: #000000 !important;
     border-color: #000000 !important;
 }
 
 /* 입력창 */
-.stTextInput > div > div > input,
-.stSelectbox > div > div,
-.stNumberInput > div > div > input {
+.stTextInput input, .stSelectbox div[data-baseweb="select"] {
     border-radius: 0px !important;
     border: 1px solid #DDDDDD !important;
-    background-color: #FFFFFF !important;
 }
 
-/* 카드 스타일 (상품 카드용) */
-.musinsa-card {
-    background: #FFFFFF;
-    border: 1px solid #EEEEEE;
-    padding: 0;
-    transition: all 0.25s ease;
-    height: 100%;
+/* 탭 */
+.stTabs [data-baseweb="tab-list"] {
+    border-bottom: 1px solid #EEEEEE !important;
 }
-.musinsa-card:hover {
-    border-color: #000000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.stTabs [data-baseweb="tab"] {
+    color: #888888 !important;
+    font-weight: 500 !important;
 }
-.musinsa-card img {
-    width: 100%;
-    aspect-ratio: 3/4;
-    object-fit: cover;
-}
-.musinsa-card-body {
-    padding: 14px 12px 18px 12px;
-}
-.musinsa-brand {
-    font-size: 12px;
-    color: #888888;
-    margin-bottom: 4px;
-    font-weight: 500;
-}
-.musinsa-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #111111;
-    margin-bottom: 8px;
-    line-height: 1.3;
-}
-.musinsa-price {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111111;
-}
-.musinsa-sale {
-    color: #FF0000;
-    font-size: 13px;
-    font-weight: 600;
-    margin-left: 6px;
+.stTabs [aria-selected="true"] {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #000000 !important;
 }
 
-/* 타이틀 */
-h1, h2, h3 {
+/* 제목 */
+h1, h2, h3, h4 {
+    color: #111111 !important;
     font-weight: 700 !important;
     letter-spacing: -0.5px !important;
+}
+
+/* 메트릭 */
+[data-testid="stMetricValue"] {
     color: #111111 !important;
+    font-weight: 700 !important;
 }
 
 /* 구분선 */
 hr {
     border-color: #EEEEEE !important;
 }
-
-/* 탭 */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 0px;
-    border-bottom: 1px solid #EEEEEE;
-}
-.stTabs [data-baseweb="tab"] {
-    height: 48px;
-    white-space: pre-wrap;
-    background-color: transparent;
-    border-radius: 0px;
-    color: #888888;
-    font-weight: 500;
-}
-.stTabs [aria-selected="true"] {
-    background-color: transparent !important;
-    color: #000000 !important;
-    border-bottom: 2px solid #000000 !important;
-    font-weight: 700 !important;
-}
-
-/* 메트릭 / 숫자 */
-[data-testid="stMetricValue"] {
-    font-weight: 700 !important;
-    color: #111111 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# ========== 실제 화면 ==========
-st.markdown("""
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
-    <div style="font-size: 28px; font-weight: 800; letter-spacing: -1px;">MUSINSA</div>
-    <div style="font-size: 14px; color: #666;">SEARCH · CART · MY</div>
-</div>
-""", unsafe_allow_html=True)
+# 테스트용 내용
+st.title("MUSINSA STYLE")
+st.write("이 화면이 검은색 버튼 + 화이트 배경으로 보이면 성공입니다.")
 
-# 카테고리 탭
-tab1, tab2, tab3, tab4 = st.tabs(["전체", "상의", "하의", "아우터"])
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.button("장바구니 담기", use_container_width=True)
+with col2:
+    st.button("바로 구매", use_container_width=True)
+with col3:
+    st.button("관심상품", use_container_width=True)
 
-with tab1:
-    st.markdown("#### New Arrivals")
-    
-    # 상품 그리드 예시
-    cols = st.columns(4)
-    
-    products = [
-        {"brand": "MUSINSA STANDARD", "name": "오버핏 후드티", "price": "39,900", "sale": "10%"},
-        {"brand": "CODEGRAPHY", "name": "와이드 데님 팬츠", "price": "59,000", "sale": ""},
-        {"brand": "ADER ERROR", "name": "로고 맨투맨", "price": "89,000", "sale": "15%"},
-        {"brand": "THISISNEVERTHAT", "name": "나일론 자켓", "price": "129,000", "sale": ""},
-    ]
-    
-    for i, col in enumerate(cols):
-        with col:
-            p = products[i]
-            st.markdown(f"""
-            <div class="musinsa-card">
-                <div style="background:#F5F5F5; height:280px; display:flex; align-items:center; justify-content:center; color:#AAA;">
-                    IMAGE
-                </div>
-                <div class="musinsa-card-body">
-                    <div class="musinsa-brand">{p['brand']}</div>
-                    <div class="musinsa-name">{p['name']}</div>
-                    <div>
-                        <span class="musinsa-price">{p['price']}원</span>
-                        <span class="musinsa-sale">{p['sale']}</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.button("장바구니", key=f"cart_{i}", use_container_width=True)
-
-st.markdown("---")
-st.caption("© MUSINSA STYLE DEMO · Streamlit Custom UI")
