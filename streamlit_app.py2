@@ -1,0 +1,107 @@
+import streamlit as st
+
+st.set_page_config(
+    page_title="MUSINSA",
+    page_icon="🖤",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ========== 무신사 스타일 CSS (강력 버전) ==========
+st.markdown("""
+<style>
+/* 전체 배경 */
+.stApp {
+    background-color: #FFFFFF !important;
+}
+
+/* 메인 영역 */
+[data-testid="stAppViewContainer"] {
+    background-color: #FFFFFF !important;
+}
+
+/* 헤더 (상단 검은색 바) */
+[data-testid="stHeader"] {
+    background-color: #000000 !important;
+}
+
+/* 사이드바 */
+[data-testid="stSidebar"] {
+    background-color: #111111 !important;
+}
+[data-testid="stSidebar"] * {
+    color: #FFFFFF !important;
+}
+
+/* 버튼 - 무신사 스타일 */
+.stButton > button {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #000000 !important;
+    border-radius: 0px !important;
+    font-weight: 600 !important;
+    height: 42px !important;
+}
+.stButton > button:hover {
+    background-color: #333333 !important;
+    border-color: #333333 !important;
+    color: white !important;
+}
+
+/* Primary 버튼 */
+button[kind="primary"] {
+    background-color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* 입력창 */
+.stTextInput input, .stSelectbox div[data-baseweb="select"] {
+    border-radius: 0px !important;
+    border: 1px solid #DDDDDD !important;
+}
+
+/* 탭 */
+.stTabs [data-baseweb="tab-list"] {
+    border-bottom: 1px solid #EEEEEE !important;
+}
+.stTabs [data-baseweb="tab"] {
+    color: #888888 !important;
+    font-weight: 500 !important;
+}
+.stTabs [aria-selected="true"] {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #000000 !important;
+}
+
+/* 제목 */
+h1, h2, h3, h4 {
+    color: #111111 !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+}
+
+/* 메트릭 */
+[data-testid="stMetricValue"] {
+    color: #111111 !important;
+    font-weight: 700 !important;
+}
+
+/* 구분선 */
+hr {
+    border-color: #EEEEEE !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 테스트용 내용
+st.title("MUSINSA STYLE")
+st.write("이 화면이 검은색 버튼 + 화이트 배경으로 보이면 성공입니다.")
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.button("장바구니 담기", use_container_width=True)
+with col2:
+    st.button("바로 구매", use_container_width=True)
+with col3:
+    st.button("관심상품", use_container_width=True)
