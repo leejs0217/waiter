@@ -1,0 +1,206 @@
+import streamlit as st
+from datetime import date
+
+st.set_page_config(
+    page_title="POPZIP | 팝업스토어",
+    page_icon="✨",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+# -----------------------------
+# POPZIP - 팝업스토어 탐색 앱
+# 실행: streamlit run app.py
+# -----------------------------
+
+POPS = [
+    {"id": 1, "name": "무드 인 서울 팝업", "category": "패션", "place": "서울 성수동", "period": "2026.11.01 - 2026.11.15", "tag": "인기", "description": "이번 시즌 신상품과 한정 컬렉션을 만나보세요.", "emoji": "🧥", "color": "#E9E5DF"},
+    {"id": 2, "name": "버터베어 디저트 스토어", "category": "음식·디저트", "place": "서울 연남동", "period": "2026.11.03 - 2026.11.20", "tag": "신규", "description": "귀여운 캐릭터 디저트와 특별한 음료를 즐겨보세요.", "emoji": "🧁", "color": "#F6E3E0"},
+    {"id": 3, "name": "포켓 프렌즈 굿즈샵", "category": "캐릭터·굿즈", "place": "서울 홍대", "period": "2026.10.28 - 2026.11.18", "tag": "한정", "description": "이곳에서만 구매할 수 있는 한정판 굿즈가 준비되어 있어요.", "emoji": "🧸", "color": "#E7EAF5"},
+    {"id": 4, "name": "글로우 뷰티 랩", "category": "뷰티", "place": "서울 성수동", "period": "2026.11.05 - 2026.11.22", "tag": "체험", "description": "퍼스널 컬러와 신제품을 직접 체험해 보세요.", "emoji": "💄", "color": "#F4E2EB"},
+    {"id": 5, "name": "리빙 오브제 마켓", "category": "라이프스타일", "place": "서울 한남동", "period": "2026.11.07 - 2026.11.30", "tag": "추천", "description": "일상에 감각을 더하는 리빙 소품을 소개합니다.", "emoji": "🪴", "color": "#E4EDE3"},
+    {"id": 6, "name": "빛의 순간 미디어 전시", "category": "전시·체험", "place": "서울 잠실", "period": "2026.10.20 - 2026.12.01", "tag": "전시", "description": "빛과 색으로 완성한 몰입형 미디어 전시입니다.", "emoji": "🎨", "color": "#E6E4F4"},
+    {"id": 7, "name": "플레이 온 게임존", "category": "게임·엔터테인먼트", "place": "서울 강남", "period": "2026.11.02 - 2026.11.16", "tag": "이벤트", "description": "게임 체험과 현장 이벤트를 즐겨보세요.", "emoji": "🎮", "color": "#E1EAF0"},
+    {"id": 8, "name": "어반 스니커즈 팝업", "category": "패션", "place": "서울 성수동", "period": "2026.11.08 - 2026.11.25", "tag": "인기", "description": "스트리트 감성의 스니커즈와 스타일링을 만나보세요.", "emoji": "👟", "color": "#EEE8DF"},
+]
+
+CATEGORIES = ["전체", "패션", "음식·디저트", "캐릭터·굿즈", "뷰티", "라이프스타일", "전시·체험", "게임·엔터테인먼트"]
+
+if "category" not in st.session_state:
+    st.session_state.category = "전체"
+if "favorites" not in st.session_state:
+    st.session_state.favorites = set()
+if "selected_popup" not in st.session_state:
+    st.session_state.selected_popup = None
+if "page" not in st.session_state:
+    st.session_state.page = "홈"
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap');
+html, body, [class*="css"] {font-family:'Pretendard',sans-serif;}
+.stApp {background:#f7f7f7; color:#171717;}
+.block-container {max-width:1120px; padding-top:1.2rem; padding-bottom:5rem;}
+header[data-testid="stHeader"] {background:rgba(247,247,247,.9);}
+#MainMenu, footer {visibility:hidden;}
+.brand {font-size:30px;font-weight:900;letter-spacing:-1.8px;color:#111;}
+.brand span {color:#ff5b45;}
+.sub {color:#858585;font-size:13px;}
+.hero {background:linear-gradient(115deg,#202020,#484848);border-radius:22px;padding:30px 34px;color:white;min-height:205px;display:flex;flex-direction:column;justify-content:center;}
+.hero-kicker {font-size:12px;letter-spacing:2px;color:#c9c9c9;font-weight:700;}
+.hero-title {font-size:clamp(27px,4vw,42px);font-weight:900;line-height:1.2;margin:10px 0;}
+.hero-desc {font-size:14px;color:#dedede;}
+.section-title {font-size:23px;font-weight:850;letter-spacing:-.8px;margin:25px 0 5px;}
+.section-sub {color:#888;font-size:13px;margin-bottom:15px;}
+.category-chip {display:inline-block;border:1px solid #e6e6e6;background:white;border-radius:999px;padding:9px 15px;margin:3px 4px 3px 0;font-size:13px;color:#333;}
+.popup-card {background:white;border:1px solid #ededed;border-radius:17px;overflow:hidden;margin-bottom:14px;transition:.2s;}
+.popup-visual {height:142px;display:flex;align-items:center;justify-content:center;font-size:65px;}
+.popup-info {padding:14px 15px 16px;}
+.popup-name {font-weight:800;font-size:16px;margin-bottom:5px;color:#171717;}
+.popup-meta {font-size:12px;color:#888;line-height:1.7;}
+.tag {font-size:10px;font-weight:800;background:#f1f1f1;border-radius:5px;padding:4px 7px;color:#555;}
+.detail-box {background:white;border-radius:20px;padding:24px;border:1px solid #eee;}
+div.stButton > button {border-radius:999px;border:1px solid #e5e5e5;font-weight:700;min-height:39px;}
+div.stButton > button[kind="primary"] {background:#111;border-color:#111;color:white;}
+div[data-testid="stTextInput"] input {border-radius:12px;background:white;}
+div[data-testid="stSelectbox"] div {border-radius:12px;}
+div[data-testid="stMetric"] {background:white;padding:15px;border-radius:14px;}
+@media(max-width:640px){
+ .block-container{padding-left:14px;padding-right:14px;padding-top:.6rem;}
+ .hero{padding:24px 21px;min-height:180px;}
+ .brand{font-size:26px;}
+ .section-title{font-size:20px;}
+}
+</style>
+""", unsafe_allow_html=True)
+
+def go(page):
+    st.session_state.page = page
+    st.session_state.selected_popup = None
+
+def popup_card(p):
+    st.markdown(
+        f"""<div class="popup-card">
+        <div class="popup-visual" style="background:{p['color']}">{p['emoji']}</div>
+        <div class="popup-info">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+            <span class="tag">{p['tag']}</span><span class="sub">{p['category']}</span>
+          </div>
+          <div class="popup-name">{p['name']}</div>
+          <div class="popup-meta">📍 {p['place']}<br>📅 {p['period']}</div>
+        </div></div>""",
+        unsafe_allow_html=True
+    )
+
+# Header
+h1, h2 = st.columns([3, 1])
+with h1:
+    st.markdown('<div class="brand">POP<span>ZIP</span> ✦</div><div class="sub">지금 가장 가보고 싶은 팝업스토어</div>', unsafe_allow_html=True)
+with h2:
+    st.write("")
+    if st.button("♡ 찜 목록", use_container_width=True):
+        go("찜")
+
+st.write("")
+if st.session_state.page == "상세" and st.session_state.selected_popup:
+    p = next((x for x in POPS if x["id"] == st.session_state.selected_popup), None)
+    if p:
+        if st.button("← 목록으로"):
+            go("홈")
+        st.markdown(f"""<div class="detail-box">
+        <div class="popup-visual" style="height:220px;background:{p['color']};border-radius:14px">{p['emoji']}</div>
+        <p class="sub">{p['category']} · {p['tag']}</p>
+        <h1 style="font-size:30px;font-weight:900">{p['name']}</h1>
+        <p style="color:#777">{p['description']}</p>
+        <hr><b>📍 위치</b><p>{p['place']}</p>
+        <b>📅 운영 기간</b><p>{p['period']}</p>
+        </div>""", unsafe_allow_html=True)
+        a, b = st.columns(2)
+        with a:
+            if st.button("♡ 찜하기", use_container_width=True):
+                st.session_state.favorites.add(p["id"])
+                st.success("찜 목록에 저장했어요.")
+        with b:
+            st.button("방문 예정", use_container_width=True, disabled=True)
+    st.stop()
+
+# Hero
+st.markdown("""
+<div class="hero">
+ <div class="hero-kicker">POPUP STORE DISCOVERY</div>
+ <div class="hero-title">취향을 발견하는 순간,<br>새로운 팝업을 만나다.</div>
+ <div class="hero-desc">패션부터 전시까지, 지금 주목받는 팝업을 한눈에.</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Search and category navigation
+st.markdown('<div class="section-title">어떤 팝업을 찾으세요?</div>', unsafe_allow_html=True)
+query = st.text_input("검색", placeholder="팝업 이름, 지역, 카테고리를 검색해 보세요", label_visibility="collapsed")
+
+st.markdown('<div class="section-title">카테고리</div><div class="section-sub">관심 있는 분야를 선택해 팝업을 둘러보세요.</div>', unsafe_allow_html=True)
+cat_cols = st.columns(4)
+cat_icons = ["⌂", "🧥", "🧁", "🧸", "💄", "🪴", "🎨", "🎮"]
+for i, cat in enumerate(CATEGORIES):
+    with cat_cols[i % 4]:
+        label = f"{cat_icons[i]}  {cat}"
+        if st.button(label, key=f"cat_{i}", type="primary" if st.session_state.category == cat else "secondary", use_container_width=True):
+            st.session_state.category = cat
+            st.session_state.page = "홈"
+            st.rerun()
+
+# Listing
+if st.session_state.page == "찜":
+    st.markdown('<div class="section-title">나의 찜 목록 ♡</div><div class="section-sub">관심 있는 팝업을 모아봤어요.</div>', unsafe_allow_html=True)
+    filtered = [p for p in POPS if p["id"] in st.session_state.favorites]
+else:
+    st.markdown('<div class="section-title">지금 인기 있는 팝업</div><div class="section-sub">새로운 경험을 발견해 보세요.</div>', unsafe_allow_html=True)
+    filtered = [p for p in POPS if st.session_state.category == "전체" or p["category"] == st.session_state.category]
+
+if query.strip():
+    q = query.strip().lower()
+    filtered = [p for p in filtered if q in p["name"].lower() or q in p["place"].lower() or q in p["category"].lower()]
+
+sort = st.selectbox("정렬", ["추천순", "최신순", "이름순"], label_visibility="collapsed")
+if sort == "이름순":
+    filtered = sorted(filtered, key=lambda x: x["name"])
+elif sort == "최신순":
+    filtered = list(reversed(filtered))
+
+st.caption(f"{len(filtered)}개의 팝업스토어")
+if not filtered:
+    st.info("조건에 맞는 팝업이 없어요. 다른 카테고리나 검색어를 선택해 보세요.")
+else:
+    cols = st.columns(2)
+    for idx, p in enumerate(filtered):
+        with cols[idx % 2]:
+            popup_card(p)
+            c1, c2 = st.columns([3, 1])
+            with c1:
+                if st.button("자세히 보기", key=f"detail_{p['id']}", use_container_width=True):
+                    st.session_state.selected_popup = p["id"]
+                    st.session_state.page = "상세"
+                    st.rerun()
+            with c2:
+                fav_label = "♥" if p["id"] in st.session_state.favorites else "♡"
+                if st.button(fav_label, key=f"fav_{p['id']}", use_container_width=True):
+                    if p["id"] in st.session_state.favorites:
+                        st.session_state.favorites.remove(p["id"])
+                    else:
+                        st.session_state.favorites.add(p["id"])
+                    st.rerun()
+
+st.markdown("---")
+nav = st.columns(4)
+for col, label, page in zip(nav, ["⌂ 홈", "▦ 카테고리", "♡ 찜", "☻ 마이"], ["홈", "카테고리", "찜", "마이"]):
+    with col:
+        if st.button(label, use_container_width=True, type="primary" if st.session_state.page == page else "secondary"):
+            if page == "카테고리":
+                st.session_state.category = "전체"
+                st.session_state.page = "홈"
+            elif page == "마이":
+                st.info("마이페이지 기능은 다음 단계에서 연결할 수 있어요.")
+            else:
+                go(page)
+            st.rerun()
+
+st.caption("POPZIP · 팝업스토어 탐색 서비스 | 현재 화면의 팝업 정보는 디자인 확인용 예시 데이터입니다.")
