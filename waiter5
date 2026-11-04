@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시세 보기 — waiter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { black: '#111', gray: '#666', light: '#F7F7F7', border: '#E5E5E5' } } } } }
+  </script>
+</head>
+<body class="bg-white text-brand-black min-h-screen">
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-brand-border">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 font-semibold text-lg">waiter</a>
+      <nav class="hidden md:flex gap-6 text-sm text-brand-gray">
+        <a href="requests.html" class="hover:text-black">의뢰하기</a>
+        <a href="waiters.html" class="hover:text-black">웨이터 찾기</a>
+        <a href="price.html" class="text-black font-medium">시세 보기</a>
+        <a href="chat.html" class="hover:text-black">채팅</a>
+      </nav>
+      <a href="requests-new.html" class="bg-black text-white text-sm px-4 py-2 rounded-lg">의뢰하기</a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold mb-2">시세 & 웨이터 현황</h1>
+    <p class="text-brand-gray mb-8">크림처럼 가격 변동을 확인하고, 원하는 금액에 몇 명의 웨이터가 있는지 바로 확인하세요.</p>
+
+    <div class="border border-brand-border rounded-xl p-5 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h2 class="font-semibold text-lg">성수 ○○ 팝업 입장 웨이팅</h2>
+          <p class="text-sm text-brand-gray mt-1">평균 웨이팅 비용 22,000원</p>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-bold">28,000원</div>
+          <div class="text-sm text-red-500">▲ +12%</div>
+        </div>
+      </div>
+
+      <p class="text-xs text-brand-gray mb-2">최근 가격 추이</p>
+      <div class="flex items-end gap-2 h-16 mb-5">
+        <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full bg-black rounded-t" style="height:64%"></div><span class="text-[10px] text-brand-gray">10/28</span></div>
+        <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full bg-black rounded-t" style="height:75%"></div><span class="text-[10px] text-brand-gray">10/30</span></div>
+        <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full bg-black rounded-t" style="height:86%"></div><span class="text-[10px] text-brand-gray">11/01</span></div>
+        <div class="flex-1 flex flex-col items-center gap-1"><div class="w-full bg-black rounded-t" style="height:100%"></div><span class="text-[10px] text-brand-gray">11/03</span></div>
+      </div>
+
+      <div class="border-t border-brand-border pt-4">
+        <p class="text-sm font-medium mb-3">원하는 가격에 가능한 웨이터 수</p>
+        <div class="flex flex-wrap gap-2 mb-4" id="priceButtons">
+          <button onclick="selectPrice(15000,2)" class="price-btn px-3 py-1.5 rounded-lg text-sm border border-brand-border hover:border-black">15,000원 · 2명</button>
+          <button onclick="selectPrice(20000,5)" class="price-btn px-3 py-1.5 rounded-lg text-sm border border-brand-border hover:border-black">20,000원 · 5명</button>
+          <button onclick="selectPrice(25000,9)" class="price-btn px-3 py-1.5 rounded-lg text-sm border bg-black text-white border-black">25,000원 · 9명</button>
+          <button onclick="selectPrice(30000,14)" class="price-btn px-3 py-1.5 rounded-lg text-sm border border-brand-border hover:border-black">30,000원 · 14명</button>
+        </div>
+        <div class="bg-brand-light rounded-lg px-4 py-3 text-sm" id="result">
+          <span class="font-medium">25,000원</span> 기준으로 <span class="font-bold">9명</span>의 웨이터가 현재 수락 가능합니다.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    func
+... 
