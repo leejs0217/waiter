@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>의뢰 목록 — waiter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { brand: { black: '#111', gray: '#666', light: '#F7F7F7', border: '#E5E5E5' } } } } }
+  </script>
+</head>
+<body class="bg-white text-brand-black min-h-screen">
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-brand-border">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <a href="index.html" class="font-semibold text-lg">waiter</a>
+      <a href="requests-new.html" class="bg-black text-white text-sm px-4 py-2 rounded-lg">+ 새 의뢰</a>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold mb-2">의뢰 목록</h1>
+    <p class="text-brand-gray text-sm mb-8">현재 진행 중인 대리 웨이팅 의뢰입니다.</p>
+
+    <div class="space-y-4">
+      <div class="border border-brand-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h2 class="font-semibold">성수 팝업스토어 웨이팅</h2>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">모집중</span>
+          </div>
+          <p class="text-sm text-brand-gray">서울 성수 · 오늘 14:00</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="font-bold">25,000원</div>
+            <div class="text-xs text-brand-gray">웨이터 8명 가능</div>
+          </div>
+          <a href="chat.html" class="border border-brand-border px-4 py-2 rounded-lg text-sm hover:bg-brand-light">상세보기</a>
+        </div>
+      </div>
+
+      <div class="border border-brand-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h2 class="font-semibold">한정판 스니커즈 매장 줄서기</h2>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-medium">모집중</span>
+          </div>
+          <p class="text-sm text-brand-gray">서울 강남 · 내일 10:00</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="font-bold">35,000원</div>
+            <div class="text-xs text-brand-gray">웨이터 5명 가능</div>
+          </div>
+          <a href="chat.html" class="border border-brand-border px-4 py-2 rounded-lg text-sm hover:bg-brand-light">상세보기</a>
+        </div>
+      </div>
+
+      <div class="border border-brand-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h2 class="font-semibold">인기 맛집 웨이팅 (2인)</h2>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium">매칭완료</span>
+          </div>
+          <p class="text-sm text-brand-gray">서울 이태원 · 오늘 18:30</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="font-bold">18,000원</div>
+          </div>
+          <a href="chat.html" class="border border-brand-border px-4 py-2 rounded-lg text-sm hover:bg-brand-light">채팅하기</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
