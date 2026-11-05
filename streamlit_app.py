@@ -1,231 +1,95 @@
-import streamlit as st
-from datetime import date, time, datetime
-import random
-
-st.set_page_config(
-    page_title="waiter",
-    page_icon="🕰️",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
-
-# 기본 스타일
-st.markdown("""
-<style>
-    .block-container { padding-top: 1.5rem; }
-    h1 { font-size: 1.8rem !important; }
-    h2 { font-size: 1.3rem !important; }
-    .stButton > button { width: 100%; border-radius: 8px; }
-</style>
-""", unsafe_allow_html=True)
-
-# 세션 초기화
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "text": "안녕하세요. 성수 팝업 웨이팅 의뢰 확인했습니다.", "time": "14:02"},
-        {"role": "user", "text": "오늘 2시부터 가능하신가요?", "time": "14:03"},
-        {"role": "assistant", "text": "네 가능합니다. 번호표 수령 후 사진으로 인증드릴게요.", "time": "14:04"},
-    ]
-if "report_done" not in st.session_state:
-    st.session_state.report_done = False
-if "report_id" not in st.session_state:
-    st.session_state.report_id = ""
-
-# 사이드바
-with st.sidebar:
-    st.title("waiter")
-    st.caption("대리 웨이팅 플랫폼")
-    menu = st.radio(
-        "메뉴 선택",
-        ["홈", "시세 보기", "의뢰하기", "웨이터 목록", "익명 채팅", "치터 신고"],
-        index=0
-    )
-    st.markdown("---")
-    st.caption("안전결제 · 익명채팅 · 신고시스템")
-
-# ========== 홈 ==========
-if menu == "홈":
-    st.title("waiter")
-    st.subheader("줄 서는 시간을 돈으로 바꾸세요")
-    st.write("인기 상품, 팝업, 맛집 웨이팅을 안전하게 맡기세요.")
-    st.write("익명 채팅 · 안전결제 · 실시간 시세 지원")
-
-    st.markdown("---")
-    st.markdown("### 왜 waiter인가요?")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("**안전결제**\n\n에스크로로 의뢰금 보호")
-        st.info("**익명 채팅**\n\n개인정보 노출 없이 시작")
-    with col2:
-        st.info("**가격 투명성**\n\n시세 + 웨이터 수 표시")
-        st.info("**치터 신고**\n\n증거 기반 신고 시스템")
-
-    st.markdown("---")
-    st.markdown("### 이용 방법")
-    st.markdown("1. **의뢰 등록** — 장소, 시간, 웃돈 입력")
-    st.markdown("2. **웨이터 매칭** — 익명 채팅으로 조율")
-    st.markdown("3. **수행 & 정산** — 인증 후 안전결제")
-
-# ========== 시세 ==========
-elif menu == "시세 보기":
-    st.title("시세 & 웨이터 현황")
-    st.caption("원하는 가격에 몇 명의 웨이터가 있는지 확인하세요")
-
-    st.markdown("#### 성수 ○○ 팝업 웨이팅")
-    c1, c2 = st.columns(2)
-    c1.metric("현재 시세", "28,000원", "+12%")
-    c2.metric("평균 비용", "22,000원")
-
-    st.markdown("**최근 가격 추이**")
-    chart_data = {
-        "날짜": ["10/28", "10/30", "11/01", "11/03"],
-        "가격(원)": [18000, 21000, 24000, 28000]
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>
+window.onerror=function(msg,src,line,col,err){window.parent.postMessage({type:'app-error',message:msg,source:src,lineno:line,colno:col,stack:err&&err.stack||''},'*');};
+window.onunhandledrejection=function(e){window.parent.postMessage({type:'app-error',message:'Unhandled promise rejection: '+(e.reason&&e.reason.message||e.reason||'unknown'),stack:e.reason&&e.reason.stack||''},'*');};
+window.addEventListener('error',function(e){var t=e&&e.target;if(t&&t!==window&&t.tagName==='SCRIPT'){var u=t.src||'';window.parent.postMessage({type:'app-error',message:'Failed to load script'+(u?': '+u:' (inline module)'),source:u},'*');}},true);
+(function(){var _f=window.fetch;window.fetch=function(){var a=arguments,u=typeof a[0]==='string'?a[0]:(a[0]&&a[0].url)||'';var p=_f.apply(this,a);p.then(function(r){if(r.status===500){r.clone().text().then(function(b){window.parent.postMessage({type:'fetch-error',url:u,status:500,body:b},'*');}).catch(function(){window.parent.postMessage({type:'fetch-error',url:u,status:500,body:''},'*');});}}).catch(function(e){window.parent.postMessage({type:'fetch-error',url:u,status:0,body:e.message||'fetch failed'},'*');});return p;};})();
+</script>
+<script src="https://builder.puter.com/runtime.js" defer></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>waiter — 대리 웨이팅 플랫폼</title>
+<meta name="description" content="줄 서는 시간을 돈으로 바꾸세요. 인기 상품, 팝업, 맛집 웨이팅을 안전하게 맡기는 대리 웨이팅 플랫폼." />
+<meta name="theme-color" content="#0B0D12" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Pretendard Variable"', 'Pretendard', 'system-ui', 'sans-serif'] },
+      colors: {
+        bg: '#0B0D12', panel: '#12151C', card: '#171B24', line: '#232835',
+        ink: '#E9ECF2', mute: '#8B93A5', dim: '#5B6273',
+        brand: { DEFAULT: '#FF6A3D', soft: 'rgba(255,106,61,0.12)' },
+        ok: '#34D399', warn: '#FBBF24', bad: '#F87171', info: '#60A5FA'
+      }
     }
-    st.bar_chart(chart_data, x="날짜", y="가격(원)", height=220)
+  }
+}
+</script>
+<link rel="stylesheet" href="styles.css" />
+    <!-- puter-pwa: generated, do not edit -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="waiter">
+    <!-- /puter-pwa -->
+</head>
+<body class="bg-bg text-ink font-sans antialiased">
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex w-64 shrink-0 flex-col border-r border-line bg-panel sticky top-0 h-screen">
+    <div class="px-6 pt-7 pb-6 flex items-center gap-3">
+      <img src="icon.svg" alt="" class="w-9 h-9" />
+      <div>
+        <div class="text-lg font-bold tracking-tight leading-none">waiter</div>
+        <div class="text-xs text-mute mt-1">대리 웨이팅 플랫폼</div>
+      </div>
+    </div>
+    <div class="px-6 text-[11px] font-semibold uppercase tracking-wider text-dim mb-2">메뉴</div>
+    <nav id="sideNav" class="px-3 flex flex-col gap-0.5"></nav>
+    <div class="mt-auto p-4">
+      <div class="rounded-xl border border-line bg-card p-4">
+        <div class="flex items-center gap-2 text-sm font-semibold"><i data-lucide="shield-check" class="w-4 h-4 text-ok"></i>안심 보장</div>
+        <p class="text-xs text-mute mt-1.5 leading-relaxed">안전결제 · 익명채팅 · 신고시스템으로 모든 거래를 보호해요.</p>
+      </div>
+      <div class="flex items-center gap-3 mt-4 px-1">
+        <div class="w-8 h-8 rounded-full bg-brand-soft text-brand grid place-items-center text-xs font-bold">익</div>
+        <div class="text-sm">
+          <div class="font-medium">익명 사용자</div>
+          <div class="text-xs text-mute">#A7F2</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-    st.markdown("---")
-    st.markdown("#### 원하는 가격대 웨이터 수")
-    price = st.slider("제시 금액 (원)", 10000, 50000, 25000, 1000)
+  <!-- Main -->
+  <div class="flex-1 min-w-0 flex flex-col">
+    <header class="sticky top-0 z-20 h-16 border-b border-line bg-bg/90 backdrop-blur flex items-center px-5 lg:px-10 gap-4">
+      <img src="icon.svg" alt="" class="w-8 h-8 lg:hidden" />
+      <h1 id="pageTitle" class="text-base font-semibold">홈</h1>
+      <div class="ml-auto flex items-center gap-2">
+        <span class="hidden sm:inline-flex items-center gap-1.5 text-xs text-mute border border-line rounded-full px-3 py-1.5"><span class="w-1.5 h-1.5 rounded-full bg-ok pulse"></span>실시간 시세 업데이트 중</span>
+        <button data-go="request" class="btn-primary h-9 px-4 text-sm"><i data-lucide="plus" class="w-4 h-4"></i><span class="hidden sm:inline">의뢰하기</span></button>
+      </div>
+    </header>
 
-    if price >= 30000:
-        count = 14
-    elif price >= 25000:
-        count = 9
-    elif price >= 20000:
-        count = 5
-    elif price >= 15000:
-        count = 2
-    else:
-        count = 0
+    <main id="view" class="flex-1 px-5 lg:px-10 py-8 pb-28 lg:pb-12 w-full max-w-6xl mx-auto"></main>
+  </div>
+</div>
 
-    st.success(f"**{price:,}원** 기준 현재 **{count}명** 가능")
-    st.progress(min(count / 14, 1.0))
+<!-- Mobile tab bar -->
+<nav id="tabNav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-line bg-panel grid grid-cols-6"></nav>
 
-# ========== 의뢰하기 ==========
-elif menu == "의뢰하기":
-    st.title("새 의뢰 등록")
+<div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-24 lg:bottom-8 z-50 hidden"></div>
 
-    title = st.text_input("의뢰 제목", placeholder="예: 성수 팝업스토어 웨이팅")
-    location = st.text_input("장소", placeholder="예: 서울 성수동")
-
-    c1, c2 = st.columns(2)
-    with c1:
-        d = st.date_input("날짜", value=date.today())
-    with c2:
-        t = st.time_input("시간", value=time(14, 0))
-
-    price = st.slider("제시 웃돈 (원)", 10000, 50000, 20000, 1000)
-
-    if price >= 30000:
-        count = 14
-    elif price >= 25000:
-        count = 9
-    elif price >= 20000:
-        count = 5
-    elif price >= 15000:
-        count = 2
-    else:
-        count = 0
-
-    st.info(f"이 가격에 **{count}명**의 웨이터가 가능합니다")
-
-    detail = st.text_area("상세 요청사항", placeholder="번호표만 받아주세요")
-
-    st.caption("안전결제: 수행 인증 후 정산됩니다.")
-
-    if st.button("의뢰 등록하기", type="primary"):
-        if not title or not location:
-            st.error("제목과 장소를 입력해 주세요.")
-        else:
-            st.success("의뢰가 등록되었습니다! (데모)")
-            st.balloons()
-
-# ========== 웨이터 목록 ==========
-elif menu == "웨이터 목록":
-    st.title("웨이터 목록")
-    st.caption("인증 · 평점 확인 후 요청하세요")
-
-    waiters = [
-        {"name": "서울줄서기러", "rating": 4.9, "done": 87, "loc": "강남", "min": 15000, "ok": True},
-        {"name": "팝업헌터", "rating": 4.8, "done": 52, "loc": "성수", "min": 12000, "ok": True},
-        {"name": "대기마스터", "rating": 4.7, "done": 134, "loc": "서울전체", "min": 20000, "ok": True},
-        {"name": "익명웨이터02", "rating": 4.5, "done": 21, "loc": "홍대", "min": 10000, "ok": False},
-    ]
-
-    for w in waiters:
-        with st.container():
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                badge = " ✓" if w["ok"] else ""
-                st.markdown(f"**{w['name']}**{badge}")
-                st.caption(f"★ {w['rating']} · {w['done']}건 · {w['loc']}")
-            with col2:
-                st.write(f"**{w['min']:,}원~**")
-                if st.button("요청", key=w["name"]):
-                    st.session_state.messages = [
-                        {"role": "assistant", "text": f"안녕하세요. {w['name']}입니다.", "time": datetime.now().strftime("%H:%M")}
-                    ]
-                    st.success("채팅 메뉴로 이동해 대화를 시작하세요.")
-            st.divider()
-
-# ========== 익명 채팅 ==========
-elif menu == "익명 채팅":
-    st.title("익명 채팅")
-    st.caption("상대방: 서울줄서기러 · 인증됨")
-
-    st.warning("채팅은 익명으로 시작됩니다.")
-
-    if st.button("이 상대방 신고하기"):
-        st.info("왼쪽 메뉴에서 **치터 신고**를 선택하세요.")
-
-    st.markdown("---")
-
-    for m in st.session_state.messages:
-        if m["role"] == "user":
-            with st.chat_message("user"):
-                st.write(m["text"])
-                st.caption(m["time"])
-        else:
-            with st.chat_message("assistant"):
-                st.write(m["text"])
-                st.caption(m["time"])
-
-    prompt = st.chat_input("메시지 입력 (익명 전송)")
-    if prompt:
-        now = datetime.now().strftime("%H:%M")
-        st.session_state.messages.append({"role": "user", "text": prompt, "time": now})
-        st.rerun()
-
-# ========== 치터 신고 ==========
-elif menu == "치터 신고":
-    st.title("치터 신고하기")
-    st.caption("사기 · 노쇼 · 허위인증 등을 신고해 주세요")
-
-    if st.session_state.report_done:
-        st.success("신고가 접수되었습니다.")
-        st.write(f"**접수번호:** `{st.session_state.report_id}`")
-        st.write("검토 후 결과를 안내해 드리겠습니다.")
-        if st.button("새 신고 작성"):
-            st.session_state.report_done = False
-            st.rerun()
-    else:
-        target = st.text_input("신고 대상", value="서울줄서기러")
-        reason = st.selectbox(
-            "신고 사유",
-            ["선택하세요", "사기 (돈만 받고 수행 안 함)", "노쇼", "허위 인증", "불쾌한 언행", "기타"]
-        )
-        detail = st.text_area("상세 내용", height=120, placeholder="언제, 어떤 일이 있었는지 구체적으로 적어주세요.")
-        files = st.file_uploader("증거 자료 (선택)", accept_multiple_files=True, type=["png", "jpg", "jpeg", "pdf"])
-
-        st.caption("허위 신고는 제재 대상이 될 수 있습니다.")
-
-        if st.button("신고 접수하기", type="primary"):
-            if reason == "선택하세요":
-                st.error("신고 사유를 선택해 주세요.")
-            elif not detail.strip():
-                st.error("상세 내용을 입력해 주세요.")
-            else:
-                st.session_state.report_id = "R" + str(random.randint(10000000, 99999999))
-                st.session_state.report_done = True
-                st.rerun()
+<script type="module" src="app.js"></script>
+</body>
+</html>
