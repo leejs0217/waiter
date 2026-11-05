@@ -1,107 +1,487 @@
-import streamlit as st
+import { createIcons, icons } from 'https://cdn.jsdelivr.net/npm/lucide@latest/+esm';
 
-st.set_page_config(
-    page_title="MUSINSA",
-    page_icon="🖤",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+const MENU = [
+  { id: 'home', label: '홈', icon: 'house' },
+  { id: 'market', label: '시세 보기', icon: 'trending-up' },
+  { id: 'request', label: '의뢰하기', icon: 'file-plus-2' },
+  { id: 'waiters', label: '웨이터 목록', icon: 'users' },
+  { id: 'chat', label: '익명 채팅', icon: 'message-circle' },
+  { id: 'report', label: '치터 신고', icon: 'shield-alert' },
+];
 
-# ========== 무신사 스타일 CSS (강력 버전) ==========
-st.markdown("""
-<style>
-/* 전체 배경 */
-.stApp {
-    background-color: #FFFFFF !important;
-}
+const won = n => n.toLocaleString('ko-KR') + '원';
 
-/* 메인 영역 */
-[data-testid="stAppViewContainer"] {
-    background-color: #FFFFFF !important;
-}
+const MARKET = [
+  { name: '성수 팝업스토어', cat: '팝업', area: '서울 성동구', price: 45000, change: 12, waiters: 18, wait: '3~4시간' },
+  { name: '한정판 스니커즈 발매', cat: '인기 상품', area: '서울 강남구', price: 80000, change: 25, waiters: 9, wait: '6시간+' },
+  { name: '런던 베이글 뮤지엄', cat: '맛집', area: '서울 종로구', price: 25000, change: -4, waiters: 32, wait: '2~3시간' },
+  { name: '캐릭터 굿즈 오픈런', cat: '인기 상품', area: '서울 마포구', price: 35000, change: 8, waiters: 14, wait: '3시간' },
+  { name: '부산 돼지국밥 맛집', cat: '맛집', area: '부산 해운대구', price: 15000, change: 0, waiters: 21, wait: '1~2시간' },
+  { name: '아이돌 생일카페', cat: '팝업', area: '서울 용산구', price: 30000, change: -6, waiters: 11, wait: '2시간' },
+  { name: '명품 매장 오픈런', cat: '인기 상품', area: '서울 중구', price: 70000, change: 15, waiters: 7, wait: '5시간' },
+  { name: '제주 카페 브런치', cat: '맛집', area: '제주 제주시', price: 18000, change: 3, waiters: 6, wait: '1시간' },
+];
 
-/* 헤더 (상단 검은색 바) */
-[data-testid="stHeader"] {
-    background-color: #000000 !important;
-}
+const WAITERS = [
+  { id: 'W-8812', rating: 4.9, jobs: 214, area: '성동·광진', tags: ['팝업', '오픈런'], online: true, verified: true },
+  { id: 'W-3021', rating: 4.8, jobs: 167, area: '강남·서초', tags: ['인기 상품'], online: true, verified: true },
+  { id: 'W-5530', rating: 4.7, jobs: 98, area: '종로·중구', tags: ['맛집', '팝업'], online: false, verified: true },
+  { id: 'W-1194', rating: 4.9, jobs: 301, area: '마포·용산', tags: ['굿즈', '팝업'], online: true, verified: true },
+  { id: 'W-7746', rating: 4.5, jobs: 42, area: '해운대·수영', tags: ['맛집'], online: false, verified: false },
+  { id: 'W-2208', rating: 4.6, jobs: 76, area: '제주 전역', tags: ['맛집', '카페'], online: true, verified: true },
+];
 
-/* 사이드바 */
-[data-testid="stSidebar"] {
-    background-color: #111111 !important;
-}
-[data-testid="stSidebar"] * {
-    color: #FFFFFF !important;
-}
+const state = {
+  view: 'home',
+  marketCat: '전체',
+  marketQuery: '',
+  waiterFilter: 'all',
+  requests: [
+    { id: 'R-1042', place: '성수 팝업스토어', date: '오늘 09:00', fee: 45000, status: '매칭 중' },
+  ],
+  chats: [
+    { id: 'W-8812', msgs: [
+      { me: false, text: '안녕하세요! 성수 팝업 의뢰 보고 연락드려요.', t: '08:41' },
+      { me: true, text: '네 안녕하세요. 오전 9시 시작 가능하실까요?', t: '08:42' },
+      { me: false, text: '네 가능합니다. 도착하면 현장 사진으로 인증드릴게요.', t: '08:43' },
+    ]},
+    { id: 'W-1194', msgs: [{ me: false, text: '굿즈 오픈런 몇 개 구매 원하시나요?', t: '어제' }] },
+  ],
+  activeChat: 'W-8812',
+};
 
-/* 버튼 - 무신사 스타일 */
-.stButton > button {
-    background-color: #000000 !important;
-    color: #FFFFFF !important;
-    border: 1px solid #000000 !important;
-    border-radius: 0px !important;
-    font-weight: 600 !important;
-    height: 42px !important;
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+function icon() { createIcons({ icons }); }
+function toast(msg, type = 'ok') {
+  const el = $('#toast');
+  const color = type === 'ok' ? 'text-ok' : 'text-bad';
+  const ic = type === 'ok' ? 'circle-check' : 'circle-alert';
+  el.innerHTML = `<div class="fade-in flex items-center gap-2 rounded-full border border-line bg-card px-4 py-2.5 text-sm"><i data-lucide="${ic}" class="w-4 h-4 ${color}"></i>${msg}</div>`;
+  el.classList.remove('hidden');
+  icon();
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.add('hidden'), 2600);
 }
-.stButton > button:hover {
-    background-color: #333333 !important;
-    border-color: #333333 !important;
-    color: white !important;
+function sectionHead(title, desc, right = '') {
+  return `<div class="flex items-end justify-between gap-4 mb-5"><div><h2 class="text-xl font-bold tracking-tight">${title}</h2>${desc ? `<p class="text-sm text-mute mt-1">${desc}</p>` : ''}</div>${right}</div>`;
 }
-
-/* Primary 버튼 */
-button[kind="primary"] {
-    background-color: #000000 !important;
-    border-color: #000000 !important;
-}
-
-/* 입력창 */
-.stTextInput input, .stSelectbox div[data-baseweb="select"] {
-    border-radius: 0px !important;
-    border: 1px solid #DDDDDD !important;
-}
-
-/* 탭 */
-.stTabs [data-baseweb="tab-list"] {
-    border-bottom: 1px solid #EEEEEE !important;
-}
-.stTabs [data-baseweb="tab"] {
-    color: #888888 !important;
-    font-weight: 500 !important;
-}
-.stTabs [aria-selected="true"] {
-    color: #000000 !important;
-    font-weight: 700 !important;
-    border-bottom: 2px solid #000000 !important;
+function changeBadge(c) {
+  if (c > 0) return `<span class="inline-flex items-center gap-0.5 text-xs font-semibold text-bad"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>${c}%</span>`;
+  if (c < 0) return `<span class="inline-flex items-center gap-0.5 text-xs font-semibold text-info"><i data-lucide="arrow-down-right" class="w-3.5 h-3.5"></i>${Math.abs(c)}%</span>`;
+  return `<span class="text-xs font-semibold text-mute">보합</span>`;
 }
 
-/* 제목 */
-h1, h2, h3, h4 {
-    color: #111111 !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.5px !important;
+/* ---------- views ---------- */
+const views = {
+  home() {
+    const features = [
+      { icon: 'lock', title: '안전결제', desc: '에스크로로 의뢰금을 보호해요. 수행 인증 후에만 정산됩니다.' },
+      { icon: 'bar-chart-3', title: '가격 투명성', desc: '실시간 시세와 대기 중인 웨이터 수를 함께 보여드려요.' },
+      { icon: 'message-circle', title: '익명 채팅', desc: '전화번호, 이름 등 개인정보 노출 없이 바로 시작해요.' },
+      { icon: 'shield-alert', title: '치터 신고', desc: '증거 기반 신고 시스템으로 불량 이용자를 걸러내요.' },
+    ];
+    const steps = [
+      { n: '01', title: '의뢰 등록', desc: '장소, 시간, 웃돈을 입력해요.', icon: 'file-plus-2' },
+      { n: '02', title: '웨이터 매칭', desc: '익명 채팅으로 세부 조건을 조율해요.', icon: 'users' },
+      { n: '03', title: '수행 & 정산', desc: '현장 인증 후 안전결제로 정산돼요.', icon: 'badge-check' },
+    ];
+    return `
+    <section class="card p-7 lg:p-10 overflow-hidden relative">
+      <div class="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block opacity-60 pointer-events-none">${heroArt()}</div>
+      <div class="relative max-w-lg">
+        <span class="chip border-brand/30 text-brand"><span class="w-1.5 h-1.5 rounded-full bg-brand"></span>대리 웨이팅 플랫폼</span>
+        <h2 class="text-3xl lg:text-[40px] font-bold tracking-tight leading-tight mt-5">줄 서는 시간을<br/><span class="text-brand">돈으로</span> 바꾸세요</h2>
+        <p class="text-mute mt-4 leading-relaxed">인기 상품, 팝업, 맛집 웨이팅을 안전하게 맡기세요.<br class="hidden sm:block"/>익명 채팅 · 안전결제 · 실시간 시세 지원</p>
+        <div class="flex flex-wrap gap-2.5 mt-7">
+          <button data-go="request" class="btn-primary h-11 px-5"><i data-lucide="file-plus-2" class="w-4 h-4"></i>웨이팅 의뢰하기</button>
+          <button data-go="market" class="btn-ghost h-11 px-5"><i data-lucide="trending-up" class="w-4 h-4"></i>시세 보기</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+      ${[['누적 의뢰', '12,480건', 'clipboard-list'], ['활동 웨이터', '1,326명', 'users'], ['평균 매칭', '7분', 'timer'], ['분쟁 해결률', '99.2%', 'shield-check']]
+        .map(([k, v, ic]) => `<div class="card p-5"><div class="flex items-center gap-2 text-xs text-mute"><i data-lucide="${ic}" class="w-3.5 h-3.5"></i>${k}</div><div class="text-2xl font-bold mt-2 tracking-tight">${v}</div></div>`).join('')}
+    </section>
+
+    <section class="mt-12">
+      ${sectionHead('왜 waiter인가요?', '믿고 맡길 수 있는 웨이팅 거래를 위한 네 가지 약속')}
+      <div class="grid sm:grid-cols-2 gap-3">
+        ${features.map(f => `
+          <div class="card p-6 flex gap-4 hover:border-[#2f3546] transition">
+            <div class="w-11 h-11 shrink-0 rounded-xl bg-brand-soft text-brand grid place-items-center"><i data-lucide="${f.icon}" class="w-5 h-5"></i></div>
+            <div><div class="font-semibold">${f.title}</div><p class="text-sm text-mute mt-1 leading-relaxed">${f.desc}</p></div>
+          </div>`).join('')}
+      </div>
+    </section>
+
+    <section class="mt-12">
+      ${sectionHead('이용 방법', '3단계면 충분해요')}
+      <div class="grid md:grid-cols-3 gap-3">
+        ${steps.map((s, i) => `
+          <div class="card p-6">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-brand">${s.n}</span>
+              <i data-lucide="${s.icon}" class="w-5 h-5 text-dim"></i>
+            </div>
+            <div class="font-semibold text-lg mt-6">${s.title}</div>
+            <p class="text-sm text-mute mt-1">${s.desc}</p>
+            <div class="h-1 rounded-full bg-line mt-6 overflow-hidden"><div class="h-full bg-brand" style="width:${(i + 1) * 33.4}%"></div></div>
+          </div>`).join('')}
+      </div>
+    </section>
+
+    <section class="mt-12">
+      ${sectionHead('지금 뜨는 웨이팅', '실시간 시세 기준', `<button data-go="market" class="text-sm text-mute hover:text-ink inline-flex items-center gap-1">전체 보기<i data-lucide="chevron-right" class="w-4 h-4"></i></button>`)}
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        ${MARKET.slice(0, 4).map(marketCard).join('')}
+      </div>
+    </section>`;
+  },
+
+  market() {
+    const cats = ['전체', '팝업', '인기 상품', '맛집'];
+    const q = state.marketQuery.trim();
+    const list = MARKET.filter(m => (state.marketCat === '전체' || m.cat === state.marketCat) && (!q || m.name.includes(q) || m.area.includes(q)));
+    const avg = Math.round(MARKET.reduce((a, b) => a + b.price, 0) / MARKET.length / 1000) * 1000;
+    return `
+    ${sectionHead('시세 보기', '장소별 평균 웃돈과 대기 중인 웨이터 수를 확인하세요.')}
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="card p-5"><div class="text-xs text-mute">평균 웃돈</div><div class="text-xl font-bold mt-1.5">${won(avg)}</div></div>
+      <div class="card p-5"><div class="text-xs text-mute">최고 시세</div><div class="text-xl font-bold mt-1.5">${won(Math.max(...MARKET.map(m => m.price)))}</div></div>
+      <div class="card p-5"><div class="text-xs text-mute">대기 웨이터</div><div class="text-xl font-bold mt-1.5">${MARKET.reduce((a, b) => a + b.waiters, 0)}명</div></div>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center justify-between mb-4">
+      <div class="flex gap-1.5 flex-wrap">${cats.map(c => `<button class="chip chip-btn ${state.marketCat === c ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('')}</div>
+      <div class="relative sm:w-64">
+        <i data-lucide="search" class="w-4 h-4 text-dim absolute left-3 top-1/2 -translate-y-1/2"></i>
+        <input id="marketSearch" class="field pl-9" placeholder="장소, 지역 검색" value="${state.marketQuery}" />
+      </div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="hidden md:grid grid-cols-12 px-5 py-3 text-xs text-dim border-b border-line">
+        <div class="col-span-4">장소</div><div class="col-span-2">카테고리</div><div class="col-span-2">예상 대기</div><div class="col-span-2 text-right">평균 웃돈</div><div class="col-span-2 text-right">웨이터</div>
+      </div>
+      ${list.length ? list.map(m => `
+        <div class="grid grid-cols-2 md:grid-cols-12 gap-y-1 items-center px-5 py-4 border-b border-line last:border-0 hover:bg-card transition">
+          <div class="md:col-span-4"><div class="font-medium">${m.name}</div><div class="text-xs text-mute mt-0.5">${m.area}</div></div>
+          <div class="md:col-span-2 hidden md:block"><span class="chip">${m.cat}</span></div>
+          <div class="md:col-span-2 hidden md:block text-sm text-mute">${m.wait}</div>
+          <div class="md:col-span-2 text-right"><div class="font-semibold">${won(m.price)}</div>${changeBadge(m.change)}</div>
+          <div class="md:col-span-2 text-right text-sm text-mute col-span-2 md:col-auto"><span class="inline-flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>${m.waiters}명 대기</span></div>
+        </div>`).join('') : `<div class="p-10 text-center text-sm text-mute">검색 결과가 없어요.</div>`}
+    </div>`;
+  },
+
+  request() {
+    return `
+    ${sectionHead('의뢰하기', '정보를 입력하면 근처 웨이터에게 바로 알림이 가요.')}
+    <div class="grid lg:grid-cols-5 gap-4">
+      <form id="reqForm" class="card p-6 lg:col-span-3 space-y-5" novalidate>
+        <div>
+          <label class="label" for="rPlace">장소</label>
+          <input id="rPlace" class="field" placeholder="예) 성수 팝업스토어" list="placeList" />
+          <datalist id="placeList">${MARKET.map(m => `<option value="${m.name}">`).join('')}</datalist>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="label" for="rDate">날짜</label><input id="rDate" type="date" class="field" /></div>
+          <div><label class="label" for="rTime">시작 시간</label><input id="rTime" type="time" class="field" value="09:00" /></div>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="label" for="rHours">예상 대기 시간</label>
+            <select id="rHours" class="field"><option value="1">1시간 이내</option><option value="2" selected>1~2시간</option><option value="3">2~4시간</option><option value="5">4시간 이상</option></select></div>
+          <div><label class="label" for="rFee">웃돈 (원)</label><input id="rFee" type="number" min="5000" step="1000" class="field" placeholder="30000" /></div>
+        </div>
+        <div id="feeHint" class="text-xs text-mute -mt-2"></div>
+        <div><label class="label" for="rNote">요청 사항</label><textarea id="rNote" rows="3" class="field resize-none" placeholder="구매 품목, 인증 방법 등을 적어주세요"></textarea></div>
+        <label class="flex items-start gap-2.5 text-sm text-mute cursor-pointer"><input id="rAgree" type="checkbox" class="mt-0.5 accent-[#FF6A3D]" />안전결제(에스크로) 이용 및 신고 정책에 동의합니다.</label>
+        <div id="reqError" class="hidden text-sm text-bad"></div>
+        <button type="submit" class="btn-primary h-11 w-full"><i data-lucide="send" class="w-4 h-4"></i>의뢰 등록하기</button>
+      </form>
+
+      <div class="lg:col-span-2 space-y-4">
+        <div class="card p-6">
+          <div class="text-sm font-semibold mb-4">결제 예상 금액</div>
+          <div class="space-y-2.5 text-sm">
+            <div class="flex justify-between"><span class="text-mute">웃돈</span><span id="sumFee">0원</span></div>
+            <div class="flex justify-between"><span class="text-mute">플랫폼 수수료 (5%)</span><span id="sumCommission">0원</span></div>
+            <div class="border-t border-line pt-3 flex justify-between font-semibold"><span>총 결제</span><span id="sumTotal" class="text-brand text-lg">0원</span></div>
+          </div>
+          <p class="text-xs text-dim mt-4 flex gap-1.5"><i data-lucide="lock" class="w-3.5 h-3.5 shrink-0"></i>수행 인증 전까지 금액은 안전하게 보관돼요.</p>
+        </div>
+        <div class="card p-6">
+          <div class="text-sm font-semibold mb-3">내 의뢰</div>
+          <div id="myRequests" class="space-y-2">${myRequests()}</div>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  waiters() {
+    const list = WAITERS.filter(w => state.waiterFilter === 'all' || (state.waiterFilter === 'online' && w.online) || (state.waiterFilter === 'verified' && w.verified));
+    const f = [['all', '전체'], ['online', '지금 활동 중'], ['verified', '인증 완료']];
+    return `
+    ${sectionHead('웨이터 목록', '모든 웨이터는 익명 ID로 표시돼요.', `<div class="hidden sm:flex gap-1.5">${f.map(([k, l]) => `<button class="chip chip-btn ${state.waiterFilter === k ? 'active' : ''}" data-wf="${k}">${l}</button>`).join('')}</div>`)}
+    <div class="flex sm:hidden gap-1.5 mb-4">${f.map(([k, l]) => `<button class="chip chip-btn ${state.waiterFilter === k ? 'active' : ''}" data-wf="${k}">${l}</button>`).join('')}</div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      ${list.map(w => `
+        <div class="card p-5">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="w-11 h-11 rounded-full bg-card border border-line grid place-items-center"><i data-lucide="user-round" class="w-5 h-5 text-mute"></i></div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-panel ${w.online ? 'bg-ok' : 'bg-dim'}"></span>
+            </div>
+            <div class="min-w-0">
+              <div class="font-semibold flex items-center gap-1.5">${w.id}${w.verified ? '<i data-lucide="badge-check" class="w-4 h-4 text-info"></i>' : ''}</div>
+              <div class="text-xs text-mute flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>${w.area}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-5">
+            <div class="rounded-lg bg-bg border border-line p-3"><div class="text-[11px] text-dim">평점</div><div class="font-semibold mt-0.5 flex items-center gap-1"><i data-lucide="star" class="w-3.5 h-3.5 text-warn fill-warn"></i>${w.rating}</div></div>
+            <div class="rounded-lg bg-bg border border-line p-3"><div class="text-[11px] text-dim">수행</div><div class="font-semibold mt-0.5">${w.jobs}건</div></div>
+          </div>
+          <div class="flex gap-1.5 mt-4">${w.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
+          <button class="btn-ghost h-10 w-full mt-5 text-sm" data-chatwith="${w.id}"><i data-lucide="message-circle" class="w-4 h-4"></i>익명 채팅 시작</button>
+        </div>`).join('')}
+    </div>`;
+  },
+
+  chat() {
+    const active = state.chats.find(c => c.id === state.activeChat) || state.chats[0];
+    return `
+    ${sectionHead('익명 채팅', '개인정보는 자동으로 가려져요.')}
+    <div class="card overflow-hidden grid md:grid-cols-[260px_1fr] h-[calc(100vh-260px)] min-h-[440px]">
+      <div class="border-r border-line hidden md:flex flex-col">
+        <div class="px-4 py-3 text-xs text-dim border-b border-line">대화 ${state.chats.length}</div>
+        <div class="overflow-y-auto scroll-thin">
+        ${state.chats.map(c => {
+          const last = c.msgs[c.msgs.length - 1];
+          return `<button data-chat="${c.id}" class="w-full text-left px-4 py-3.5 flex gap-3 items-center border-b border-line ${c.id === active.id ? 'bg-card' : 'hover:bg-card/60'}">
+            <div class="w-9 h-9 rounded-full bg-bg border border-line grid place-items-center shrink-0"><i data-lucide="user-round" class="w-4 h-4 text-mute"></i></div>
+            <div class="min-w-0 flex-1"><div class="flex justify-between text-sm font-medium"><span>${c.id}</span><span class="text-[11px] text-dim font-normal">${last ? last.t : ''}</span></div><div class="text-xs text-mute truncate mt-0.5">${last ? escapeHtml(last.text) : '대화를 시작해보세요'}</div></div>
+          </button>`;
+        }).join('')}
+        </div>
+      </div>
+      <div class="flex flex-col min-h-0">
+        <div class="h-14 px-5 border-b border-line flex items-center gap-3">
+          <div class="font-semibold text-sm">${active.id}</div>
+          <span class="chip text-[11px]"><i data-lucide="eye-off" class="w-3 h-3"></i>익명</span>
+          <button data-go="report" class="ml-auto text-xs text-mute hover:text-bad inline-flex items-center gap-1"><i data-lucide="flag" class="w-3.5 h-3.5"></i>신고</button>
+        </div>
+        <div id="msgList" class="flex-1 overflow-y-auto scroll-thin p-5 space-y-3">
+          <div class="text-center"><span class="text-[11px] text-dim border border-line rounded-full px-3 py-1">외부 연락처 공유 시 자동으로 가려집니다</span></div>
+          ${active.msgs.map(m => `
+            <div class="flex ${m.me ? 'justify-end' : ''}">
+              <div class="max-w-[75%]">
+                <div class="px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${m.me ? 'bg-brand text-bg rounded-br-md font-medium' : 'bg-card border border-line rounded-bl-md'}">${escapeHtml(m.text)}</div>
+                <div class="text-[10px] text-dim mt-1 ${m.me ? 'text-right' : ''}">${m.t}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <form id="chatForm" class="p-3 border-t border-line flex gap-2">
+          <input id="chatInput" class="field" placeholder="메시지를 입력하세요" autocomplete="off" />
+          <button class="btn-primary w-11 shrink-0" aria-label="보내기"><i data-lucide="send" class="w-4 h-4"></i></button>
+        </form>
+      </div>
+    </div>`;
+  },
+
+  report() {
+    const types = ['노쇼 / 잠적', '허위 인증', '추가 금액 요구', '개인정보 요구', '기타'];
+    return `
+    ${sectionHead('치터 신고', '증거를 첨부하면 24시간 이내 검토 후 결과를 알려드려요.')}
+    <div class="grid lg:grid-cols-5 gap-4">
+      <form id="reportForm" class="card p-6 lg:col-span-3 space-y-5" novalidate>
+        <div><label class="label" for="rpTarget">신고 대상 ID</label><input id="rpTarget" class="field" placeholder="예) W-1234" /></div>
+        <div>
+          <span class="label">신고 유형</span>
+          <div class="flex flex-wrap gap-1.5" id="rpTypes">${types.map((t, i) => `<button type="button" class="chip chip-btn ${i === 0 ? 'active' : ''}" data-rtype="${t}">${t}</button>`).join('')}</div>
+        </div>
+        <div><label class="label" for="rpDesc">상세 내용</label><textarea id="rpDesc" rows="4" class="field resize-none" placeholder="언제, 어디서, 어떤 일이 있었는지 적어주세요 (10자 이상)"></textarea></div>
+        <div>
+          <span class="label">증거 자료</span>
+          <label class="flex flex-col items-center justify-center gap-2 border border-dashed border-line rounded-xl p-6 cursor-pointer hover:border-mute transition text-center">
+            <i data-lucide="image-plus" class="w-6 h-6 text-mute"></i>
+            <span class="text-sm text-mute" id="fileLabel">채팅 캡처, 현장 사진 등을 올려주세요</span>
+            <input id="rpFile" type="file" accept="image/*" multiple class="hidden" />
+          </label>
+        </div>
+        <div id="rpError" class="hidden text-sm text-bad"></div>
+        <button class="btn-primary h-11 w-full"><i data-lucide="shield-alert" class="w-4 h-4"></i>신고 접수하기</button>
+      </form>
+      <div class="lg:col-span-2 card p-6 h-fit">
+        <div class="text-sm font-semibold mb-4">처리 절차</div>
+        <ol class="space-y-5">
+          ${[['신고 접수', '증거와 함께 신고가 등록돼요.', 'inbox'], ['운영팀 검토', '채팅 기록과 인증 자료를 확인해요.', 'search-check'], ['조치 & 환불', '확인 시 계정 제재 및 의뢰금 환불', 'gavel']]
+            .map(([t, d, ic], i) => `<li class="flex gap-3"><div class="w-8 h-8 rounded-full bg-brand-soft text-brand grid place-items-center shrink-0"><i data-lucide="${ic}" class="w-4 h-4"></i></div><div><div class="text-sm font-medium">${i + 1}. ${t}</div><div class="text-xs text-mute mt-0.5">${d}</div></div></li>`).join('')}
+        </ol>
+      </div>
+    </div>`;
+  },
+};
+
+function marketCard(m) {
+  return `<div class="card p-5">
+    <div class="flex items-center justify-between"><span class="chip">${m.cat}</span>${changeBadge(m.change)}</div>
+    <div class="font-semibold mt-4 truncate">${m.name}</div>
+    <div class="text-xs text-mute mt-0.5">${m.area}</div>
+    <div class="flex items-end justify-between mt-5">
+      <div><div class="text-[11px] text-dim">평균 웃돈</div><div class="text-lg font-bold">${won(m.price)}</div></div>
+      <div class="text-xs text-mute flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i>${m.waiters}</div>
+    </div>
+  </div>`;
 }
 
-/* 메트릭 */
-[data-testid="stMetricValue"] {
-    color: #111111 !important;
-    font-weight: 700 !important;
+function myRequests() {
+  if (!state.requests.length) return `<div class="text-sm text-mute">등록한 의뢰가 없어요.</div>`;
+  return state.requests.map(r => `
+    <div class="rounded-lg bg-bg border border-line p-3.5 flex items-center gap-3">
+      <div class="min-w-0 flex-1"><div class="text-sm font-medium truncate">${escapeHtml(r.place)}</div><div class="text-xs text-mute mt-0.5">${r.date} · ${won(r.fee)}</div></div>
+      <span class="chip text-[11px] border-warn/30 text-warn">${r.status}</span>
+    </div>`).join('');
 }
 
-/* 구분선 */
-hr {
-    border-color: #EEEEEE !important;
+function heroArt() {
+  let dots = '';
+  for (let i = 0; i < 7; i++) {
+    const x = 60 + i * 52, active = i === 3;
+    dots += `<g transform="translate(${x},${150 + Math.sin(i) * 6})"><circle r="14" cy="-34" fill="${active ? '#FF6A3D' : '#232835'}"/><rect x="-16" y="-16" width="32" height="46" rx="12" fill="${active ? '#FF6A3D' : '#232835'}"/></g>`;
+  }
+  return `<svg viewBox="0 0 440 300" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+    <line x1="30" y1="190" x2="420" y2="190" stroke="#232835" stroke-dasharray="4 6"/>
+    ${dots}
+    <g transform="translate(216,72)"><rect x="-38" y="-16" width="76" height="28" rx="14" fill="#171B24" stroke="#FF6A3D"/><text x="0" y="3" text-anchor="middle" font-size="12" font-weight="700" fill="#FF6A3D" font-family="sans-serif">+45,000</text></g>
+  </svg>`;
 }
-</style>
-""", unsafe_allow_html=True)
 
-# 테스트용 내용
-st.title("MUSINSA STYLE")
-st.write("이 화면이 검은색 버튼 + 화이트 배경으로 보이면 성공입니다.")
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.button("장바구니 담기", use_container_width=True)
-with col2:
-    st.button("바로 구매", use_container_width=True)
-with col3:
-    st.button("관심상품", use_container_width=True)
+/* ---------- render ---------- */
+function renderNav() {
+  $('#sideNav').innerHTML = MENU.map(m => `<button class="nav-item ${state.view === m.id ? 'active' : ''}" data-go="${m.id}"><i data-lucide="${m.icon}" class="w-[18px] h-[18px]"></i>${m.label}</button>`).join('');
+  $('#tabNav').innerHTML = MENU.map(m => `<button class="tab-item ${state.view === m.id ? 'active' : ''}" data-go="${m.id}"><i data-lucide="${m.icon}" class="w-5 h-5"></i>${m.label.replace(' 보기', '').replace(' 목록', '')}</button>`).join('');
+}
+
+function render() {
+  renderNav();
+  $('#pageTitle').textContent = MENU.find(m => m.id === state.view).label;
+  const v = $('#view');
+  v.innerHTML = `<div class="fade-in">${views[state.view]()}</div>`;
+  icon();
+  bindView();
+}
+
+function go(id) {
+  if (!views[id]) return;
+  state.view = id;
+  location.hash = id;
+  render();
+  window.scrollTo({ top: 0 });
+}
+
+function bindView() {
+  if (state.view === 'market') {
+    const s = $('#marketSearch');
+    s.addEventListener('input', e => {
+      state.marketQuery = e.target.value;
+      const pos = e.target.selectionStart;
+      render();
+      const n = $('#marketSearch'); n.focus(); n.setSelectionRange(pos, pos);
+    });
+  }
+  if (state.view === 'request') {
+    const d = $('#rDate');
+    d.value = new Date().toISOString().slice(0, 10);
+    const place = $('#rPlace'), fee = $('#rFee');
+    const update = () => {
+      const f = Math.max(0, Number(fee.value) || 0);
+      const c = Math.round(f * 0.05);
+      $('#sumFee').textContent = won(f);
+      $('#sumCommission').textContent = won(c);
+      $('#sumTotal').textContent = won(f + c);
+      const m = MARKET.find(x => x.name === place.value.trim());
+      $('#feeHint').innerHTML = m ? `<span class="inline-flex items-center gap-1"><i data-lucide="info" class="w-3.5 h-3.5"></i>이 장소의 평균 웃돈은 <b class="text-ink">${won(m.price)}</b>, 현재 ${m.waiters}명이 대기 중이에요.</span>` : '';
+      icon();
+    };
+    place.addEventListener('input', update);
+    fee.addEventListener('input', update);
+    $('#reqForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const err = $('#reqError');
+      const f = Number(fee.value);
+      let msg = '';
+      if (!place.value.trim()) msg = '장소를 입력해주세요.';
+      else if (!f || f < 5000) msg = '웃돈은 5,000원 이상 입력해주세요.';
+      else if (!$('#rAgree').checked) msg = '안전결제 정책에 동의해주세요.';
+      if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      state.requests.unshift({ id: 'R-' + Math.floor(1000 + Math.random() * 9000), place: place.value.trim(), date: `${d.value.slice(5).replace('-', '/')} ${$('#rTime').value}`, fee: f, status: '매칭 중' });
+      $('#myRequests').innerHTML = myRequests();
+      e.target.reset(); d.value = new Date().toISOString().slice(0, 10); update();
+      toast('의뢰가 등록됐어요. 웨이터 매칭을 시작합니다.');
+    });
+  }
+  if (state.view === 'chat') {
+    const list = $('#msgList'); list.scrollTop = list.scrollHeight;
+    $('#chatForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = $('#chatInput');
+      let text = input.value.trim();
+      if (!text) return;
+      text = text.replace(/01[0-9][-\s.]?\d{3,4}[-\s.]?\d{4}/g, '***-****-****');
+      const c = state.chats.find(x => x.id === state.activeChat);
+      const now = new Date(); const t = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      c.msgs.push({ me: true, text, t });
+      render();
+      $('#chatInput').focus();
+      setTimeout(() => {
+        c.msgs.push({ me: false, text: '확인했습니다! 진행 상황은 여기로 공유드릴게요.', t });
+        if (state.view === 'chat' && state.activeChat === c.id) { render(); $('#chatInput').focus(); }
+      }, 1200);
+    });
+  }
+  if (state.view === 'report') {
+    $('#rpFile').addEventListener('change', e => {
+      const n = e.target.files.length;
+      $('#fileLabel').textContent = n ? `${n}개 파일 선택됨` : '채팅 캡처, 현장 사진 등을 올려주세요';
+    });
+    $('#reportForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const err = $('#rpError');
+      let msg = '';
+      if (!$('#rpTarget').value.trim()) msg = '신고 대상 ID를 입력해주세요.';
+      else if ($('#rpDesc').value.trim().length < 10) msg = '상세 내용을 10자 이상 입력해주세요.';
+      if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      e.target.reset();
+      $('#fileLabel').textContent = '채팅 캡처, 현장 사진 등을 올려주세요';
+      toast('신고가 접수됐어요. 24시간 이내 결과를 알려드릴게요.');
+    });
+  }
+}
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]');
+  if (g) { go(g.dataset.go); return; }
+  const cat = e.target.closest('[data-cat]');
+  if (cat) { state.marketCat = cat.dataset.cat; render(); return; }
+  const wf = e.target.closest('[data-wf]');
+  if (wf) { state.waiterFilter = wf.dataset.wf; render(); return; }
+  const cw = e.target.closest('[data-chatwith]');
+  if (cw) {
+    const id = cw.dataset.chatwith;
+    if (!state.chats.find(c => c.id === id)) state.chats.unshift({ id, msgs: [] });
+    state.activeChat = id; go('chat'); return;
+  }
+  const ch = e.target.closest('[data-chat]');
+  if (ch) { state.activeChat = ch.dataset.chat; render(); return; }
+  const rt = e.target.closest('[data-rtype]');
+  if (rt) { document.querySelectorAll('[data-rtype]').forEach(b => b.classList.toggle('active', b === rt)); }
+});
+
+const initial = location.hash.slice(1);
+if (views[initial]) state.view = initial;
+render();
+
